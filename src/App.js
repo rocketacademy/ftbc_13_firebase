@@ -15,7 +15,7 @@ import {
   onChildRemoved,
 } from "firebase/database";
 
-import { ref as sRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref as sRef, uploadBytes, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 
 const DB_STUDENTLIST_KEY = "studentList";
 class App extends React.Component {
@@ -84,7 +84,13 @@ class App extends React.Component {
     e.preventDefault();
     // push up image into storage
     const fileRef = sRef(storage, `students/${this.state.file.name}`);
-    uploadBytes(fileRef, this.state.file)
+    uploadBytesResumable(fileRef, this.state.file)
+      .then((snapshot) => {
+        console.log('snapshot:', snapshot)
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log("Upload is " + progress + "% done");
+      })
       .then(() => {
         return getDownloadURL(fileRef);
       })
@@ -156,7 +162,7 @@ class App extends React.Component {
                 <p>{student.desc}</p>
                 <br />
                 <img src={student.profilePic} alt={student.name}></img>
-                <br/>
+                <br />
                 <button id={student.key} onClick={(e) => this.handleDelete(e)}>
                   delete me
                 </button>
