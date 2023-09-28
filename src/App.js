@@ -3,7 +3,7 @@ import logo from "./logo.svg";
 import "./App.css";
 
 //import my firebase configged apps
-import { database, storage } from "./firebase/firebase";
+import { database, storage, auth } from "./firebase/firebase";
 
 // import firebase actions
 import {
@@ -15,7 +15,20 @@ import {
   onChildRemoved,
 } from "firebase/database";
 
-import { ref as sRef, uploadBytes, getDownloadURL, uploadBytesResumable } from "firebase/storage";
+import {
+  ref as sRef,
+  uploadBytes,
+  getDownloadURL,
+  uploadBytesResumable,
+} from "firebase/storage";
+
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 
 const DB_STUDENTLIST_KEY = "studentList";
 class App extends React.Component {
@@ -26,6 +39,10 @@ class App extends React.Component {
       description: "",
       studentList: [],
       file: null,
+      email: "",
+      password: "",
+      isLoggedIn: false,
+      user: {},
     };
   }
 
@@ -61,22 +78,53 @@ class App extends React.Component {
         });
       });
     });
+
+    onAuthStateChanged(auth, (userInfo) => {
+      if (userInfo) {
+        console.log(userInfo);
+        // signed in user
+        this.setState({
+          user: userInfo,
+          isLoggedIn: true,
+        });
+      } else {
+        // no signed in user
+        this.setState({
+          user: {},
+          isLoggedIn: false,
+        });
+      }
+    });
   }
 
   testFunction = () => {
     console.log("this is a test");
   };
 
+  logout = () => {
+    signOut(auth).then(() => {
+      console.log("Signed out");
+    });
+  };
+
   onChange = (e) => {
-    if (e.target.id === "firstName") {
-      this.setState({
-        firstName: e.target.value,
-      });
-    } else {
-      this.setState({
-        description: e.target.value,
-      });
-    }
+    const name = e.target.id;
+    const value = e.target.value;
+
+    this.setState({
+      [name]: value,
+    });
+
+    // foongs updating logic
+    // if (e.target.id === "firstName") {
+    //   this.setState({
+    //     firstName: e.target.value,
+    //   });
+    // } else {
+    //   this.setState({
+    //     description: e.target.value,
+    //   });
+    // }
   };
 
   // on submit, save a record into firebase
@@ -86,7 +134,7 @@ class App extends React.Component {
     const fileRef = sRef(storage, `students/${this.state.file.name}`);
     uploadBytesResumable(fileRef, this.state.file)
       .then((snapshot) => {
-        console.log('snapshot:', snapshot)
+        console.log("snapshot:", snapshot);
         const progress =
           (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         console.log("Upload is " + progress + "% done");
@@ -104,6 +152,7 @@ class App extends React.Component {
           desc: this.state.description,
           date: `${new Date()}`,
           profilePic: url,
+          email: this.state.user.email,
         });
       })
       .then(() => {
@@ -130,28 +179,111 @@ class App extends React.Component {
     return (
       <div className="App">
         <header className="App-header">
+          {this.state.isLoggedIn ? (
+            <button onClick={this.logout}>signout</button>
+          ) : (
+            <>
+              <div>
+                <label>Email</label>
+                <br />
+                <input
+                  type="text"
+                  id="email"
+                  placeholder="enter email"
+                  onChange={(e) => this.onChange(e)}
+                  value={this.state.email}
+                />
+                <br />
+                <label>Password</label>
+                <br />
+
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="enter password"
+                  onChange={(e) => this.onChange(e)}
+                  value={this.state.password}
+                />
+                <br />
+              </div>
+              <div>
+                <button
+                  onClick={async () => {
+                    return createUserWithEmailAndPassword(
+                      auth,
+                      this.state.email,
+                      this.state.password
+                    ).then((userInfo) => {
+                      console.log("successful signup");
+                      console.log(userInfo);
+                      this.setState({
+                        email: "",
+                        password: "",
+                      });
+                    });
+                  }}
+                >
+                  Signup
+                </button>
+                <button
+                  onClick={async () => {
+                    return signInWithEmailAndPassword(
+                      auth,
+                      this.state.email,
+                      this.state.password
+                    ).then((userInfo) => {
+                      console.log("successful signup");
+                      console.log(userInfo);
+                      this.setState({
+                        email: "",
+                        password: "",
+                      });
+                    });
+                  }}
+                >
+                  Login
+                </button>
+                {this.state.email.length > 10 ? (
+                  <button
+                    onClick={() =>
+                      sendPasswordResetEmail(auth, this.state.email).then(
+                        () => {
+                          console.log("email sent");
+                        }
+                      )
+                    }
+                  >
+                    Forgotten password{" "}
+                  </button>
+                ) : null}
+              </div>
+            </>
+          )}
           <img src={logo} className="App-logo" alt="logo" />
-          <form onSubmit={(e) => this.handleSubmit(e)}>
-            <input
-              type="text"
-              id="firstName"
-              placeholder="enter student name here:"
-              onChange={(e) => this.onChange(e)}
-              value={this.state.firstName}
-            />
-            <br />
-            <input
-              type="text"
-              id="description"
-              placeholder="enter student description:"
-              onChange={(e) => this.onChange(e)}
-              value={this.state.description}
-            />
-            <br />
-            <input type="file" onChange={(e) => this.fileChange(e)} />
-            <br />
-            <input type="submit" />
-          </form>
+
+          {this.state.isLoggedIn ? (
+            <form onSubmit={(e) => this.handleSubmit(e)}>
+              <input
+                type="text"
+                id="firstName"
+                placeholder="enter student name here:"
+                onChange={(e) => this.onChange(e)}
+                value={this.state.firstName}
+              />
+              <br />
+              <input
+                type="text"
+                id="description"
+                placeholder="enter student description:"
+                onChange={(e) => this.onChange(e)}
+                value={this.state.description}
+              />
+              <br />
+              <input type="file" onChange={(e) => this.fileChange(e)} />
+              <br />
+              <input type="submit" />
+            </form>
+          ) : null}
 
           <br />
           {this.state.studentList.map((student) => {
@@ -161,11 +293,19 @@ class App extends React.Component {
                 <br />
                 <p>{student.desc}</p>
                 <br />
+                <p>{student.email ? student.email : null}</p>
+                <br />
                 <img src={student.profilePic} alt={student.name}></img>
                 <br />
-                <button id={student.key} onClick={(e) => this.handleDelete(e)}>
-                  delete me
-                </button>
+                {this.state.isLoggedIn &&
+                student.email === this.state.user.email ? (
+                  <button
+                    id={student.key}
+                    onClick={(e) => this.handleDelete(e)}
+                  >
+                    delete me
+                  </button>
+                ) : null}
               </div>
             );
           })}
