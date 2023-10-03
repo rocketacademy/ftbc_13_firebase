@@ -31,6 +31,7 @@ import {
 } from "firebase/auth";
 
 const DB_STUDENTLIST_KEY = "studentList";
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -183,7 +184,7 @@ class App extends React.Component {
             <button onClick={this.logout}>signout</button>
           ) : (
             <>
-              <div>
+              <form>
                 <label>Email</label>
                 <br />
                 <input
@@ -205,58 +206,63 @@ class App extends React.Component {
                   value={this.state.password}
                 />
                 <br />
-              </div>
-              <div>
-                <button
-                  onClick={async () => {
-                    return createUserWithEmailAndPassword(
-                      auth,
-                      this.state.email,
-                      this.state.password
-                    ).then((userInfo) => {
-                      console.log("successful signup");
-                      console.log(userInfo);
-                      this.setState({
-                        email: "",
-                        password: "",
-                      });
-                    });
-                  }}
-                >
-                  Signup
-                </button>
-                <button
-                  onClick={async () => {
-                    return signInWithEmailAndPassword(
-                      auth,
-                      this.state.email,
-                      this.state.password
-                    ).then((userInfo) => {
-                      console.log("successful signup");
-                      console.log(userInfo);
-                      this.setState({
-                        email: "",
-                        password: "",
-                      });
-                    });
-                  }}
-                >
-                  Login
-                </button>
-                {this.state.email.length > 10 ? (
+                <div>
                   <button
-                    onClick={() =>
-                      sendPasswordResetEmail(auth, this.state.email).then(
-                        () => {
-                          console.log("email sent");
-                        }
-                      )
-                    }
+                    onClick={async (e) => {
+                      e.preventDefault();
+
+                      return createUserWithEmailAndPassword(
+                        auth,
+                        this.state.email,
+                        this.state.password
+                      ).then((userInfo) => {
+                        console.log("successful signup");
+                        console.log(userInfo);
+                        this.setState({
+                          email: "",
+                          password: "",
+                        });
+                      });
+                    }}
                   >
-                    Forgotten password{" "}
+                    Signup
                   </button>
-                ) : null}
-              </div>
+                  <button
+                    onClick={async (e) => {
+                      e.preventDefault();
+
+                      return signInWithEmailAndPassword(
+                        auth,
+                        this.state.email,
+                        this.state.password
+                      ).then((userInfo) => {
+                        console.log("successful signup");
+                        console.log(userInfo);
+                        this.setState({
+                          email: "",
+                          password: "",
+                        });
+                      });
+                    }}
+                  >
+                    Login
+                  </button>
+                  {this.state.email.length > 10 ? (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        sendPasswordResetEmail(auth, this.state.email).then(
+                          () => {
+                            console.log("email sent");
+                          }
+                        );
+                      }}
+                    >
+                      Forgotten password{" "}
+                    </button>
+                  ) : null}
+                </div>
+              </form>
             </>
           )}
           <img src={logo} className="App-logo" alt="logo" />
