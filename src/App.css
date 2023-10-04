@@ -40,3 +40,15 @@
 img {
   height: 20vh;
 }
+
+.link {
+  margin: 2em;
+  padding: 1em;
+  border: #fff solid 3px;
+  border-radius: 25px;
+}
+
+.nav {
+  margin: 4em;
+  padding: 2em;
+}

@@ -4,6 +4,7 @@ import {
   getDownloadURL,
   uploadBytesResumable,
 } from "firebase/storage";
+import { useNavigate } from "react-router-dom";
 
 import { ref, push } from "firebase/database";
 
@@ -14,6 +15,7 @@ const NewPost = ({ DB_STUDENTLIST_KEY, database, user }) => {
   const [description, setDescription] = useState("");
   const [file, setFile] = useState(null);
 
+  const navigate = useNavigate();
   const handleSubmit = (e) => {
     e.preventDefault();
     // push up image into storage
@@ -46,6 +48,7 @@ const NewPost = ({ DB_STUDENTLIST_KEY, database, user }) => {
         setDescription("");
         setFile(null);
       });
+    navigate("/students");
   };
 
   return (

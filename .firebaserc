@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "ftbc13"
+  },
+  "hosting": {
+    "headers": [
+      {
+        "source": "/service-worker.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  }
+}

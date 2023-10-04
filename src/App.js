@@ -1,19 +1,25 @@
 import { useState, useEffect } from "react";
-import logo from "./logo.svg";
 import "./App.css";
+import { Routes, Route } from "react-router-dom";
 
 // import components
 import LoginSignup from "./Components/LoginSignup";
 import DisplayStudents from "./Components/DisplayStudents";
 import NewPost from "./Components/NewPost";
+import Error from "./Components/Error";
+import Profile from "./Components/Profile";
+import EditProfile from "./Components/EditProfile";
 
 // Firebase
 import { database, auth } from "./firebase/firebase";
 import { ref, onChildAdded, remove, onChildRemoved } from "firebase/database";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import Navbar from "./Components/Navbar";
 
 const App = () => {
+  // firebase key
   const DB_STUDENTLIST_KEY = "studentList";
+  // global app
   const [studentList, setStudentList] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState({});
@@ -61,28 +67,37 @@ const App = () => {
   return (
     <div className="App">
       <header className="App-header">
-        {isLoggedIn ? (
-          <button onClick={logout}>signout</button>
-        ) : (
-          <LoginSignup auth={auth} />
-        )}
-        <img src={logo} className="App-logo" alt="logo" />
+        <Navbar isLoggedIn={isLoggedIn} logout={logout} />
 
-        {isLoggedIn ? (
-          <NewPost
-            DB_STUDENTLIST_KEY={DB_STUDENTLIST_KEY}
-            database={database}
-            user={user}
+        <Routes>
+          <Route path="authentication" element={<LoginSignup auth={auth} />} />
+          <Route
+            path="students"
+            element={
+              <DisplayStudents
+                studentList={studentList}
+                user={user}
+                handleDelete={handleDelete}
+                isLoggedIn={isLoggedIn}
+              />
+            }
+          >
+            <Route path="profile" element={<Profile user={user} />} />
+            <Route path="editProfile" element={<EditProfile user={user} />} />
+          </Route>
+          <Route
+            path="composer"
+            element={
+              <NewPost
+                DB_STUDENTLIST_KEY={DB_STUDENTLIST_KEY}
+                database={database}
+                user={user}
+              />
+            }
           />
-        ) : null}
 
-        <br />
-        <DisplayStudents
-          studentList={studentList}
-          user={user}
-          handleDelete={handleDelete}
-          isLoggedIn={isLoggedIn}
-        />
+          <Route path="*" element={<Error />} />
+        </Routes>
       </header>
     </div>
   );

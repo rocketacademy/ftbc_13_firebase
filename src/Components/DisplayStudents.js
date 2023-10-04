@@ -1,3 +1,5 @@
+import { Outlet, Link } from "react-router-dom";
+
 const DisplayStudents = ({ studentList, user, handleDelete, isLoggedIn }) => {
   return (
     <div>
@@ -19,6 +21,11 @@ const DisplayStudents = ({ studentList, user, handleDelete, isLoggedIn }) => {
             );
           })
         : null}
+
+      <Link to="profile">Profile</Link>
+      <Link to="editProfile">Edit Profile</Link>
+
+      <Outlet />
     </div>
   );
 };
